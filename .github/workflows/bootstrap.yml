@@ -1,0 +1,49 @@
+name: Bootstrap Shiva Intel App V2
+on:
+  push:
+    paths:
+      - '.github/workflows/bootstrap.yml'
+permissions:
+  contents: write
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import isolated mobile rebuild
+        run: |
+          set -e
+          curl -L https://github.com/cmhart13-boop/Shiva-App/archive/9f4773f3db09e24dff4789ffb57e7a250213c9f2.tar.gz -o /tmp/shiva.tar.gz
+          mkdir -p /tmp/shiva
+          tar -xzf /tmp/shiva.tar.gz -C /tmp/shiva --strip-components=1
+          cp /tmp/shiva/app.py ./app.py
+          cp /tmp/shiva/shiva_ai.py ./shiva_ai.py
+          cp /tmp/shiva/shiva_draft.py ./shiva_draft.py
+          cp /tmp/shiva/player_profiles.py ./player_profiles.py
+          cp /tmp/shiva/current_rankings.csv ./current_rankings.csv
+          cp /tmp/shiva/shiva_draft_roi.sqlite ./shiva_draft_roi.sqlite
+          cp /tmp/shiva/requirements.txt ./requirements.txt
+          mkdir -p .streamlit assets
+          cp /tmp/shiva/.streamlit/config.toml ./.streamlit/config.toml
+          cp /tmp/shiva/assets/shiva_splash.b64 ./assets/shiva_splash.b64
+          cat > README.md <<'EOF'
+          # Shiva Intel App V2
+
+          Standalone Streamlit deployment of the rebuilt Shiva Intelligence mobile fantasy-football application.
+
+          Streamlit deployment settings:
+          - Repository: `cmhart13-boop/Shiva-Intell-App-V2`
+          - Branch: `main`
+          - Main file path: `app.py`
+
+          Add `OPENAI_API_KEY` to Streamlit Secrets to activate Ask Shiva GPT.
+          EOF
+          rm -rf __pycache__
+          printf '__pycache__/\n*.py[cod]\n.env\n.streamlit/secrets.toml\n' > .gitignore
+      - name: Commit imported app
+        run: |
+          git config user.name 'Shiva App Bootstrap'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app.py shiva_ai.py shiva_draft.py player_profiles.py current_rankings.csv shiva_draft_roi.sqlite requirements.txt .streamlit/config.toml assets/shiva_splash.b64 README.md .gitignore
+          git commit -m 'Install standalone Shiva Intelligence V2 mobile app'
+          git push
